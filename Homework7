@@ -1,0 +1,92 @@
+(define-struct book [title authors page-count])
+(define-struct article [title authors url word-count])
+ 
+; An InfoSource is one of:
+; - (make-book String [List-of String] Number)
+; - (make-article String [List-of String] String Number)
+; and represents either:
+; - a book's name, author(s), and number of pages
+; - an online article's name, author(s), url, and number of words
+ 
+(define IS-BOOK-1
+  (make-book
+   "Algorithms to Live By: The Computer Science of Human Decisions"
+   (list "Brian Christian" "Tom Griffiths")
+   368))
+ 
+(define IS-BOOK-2
+  (make-book
+   (string-append
+    "Hidden Figures: "
+    "The American Dream and the Untold Story of the Black Women Who Helped Win the Space Race")
+   (list "Margot Lee Shetterly")
+   384))
+ 
+(define IS-ARTICLE-1
+  (make-article
+   "Teach Yourself Programming in Ten Years"
+   (list "Peter Norvig")
+   "http://norvig.com/21-days.html"
+   1790))
+ 
+(define IS-ARTICLE-2
+  (make-article
+   "Is There a Fix for Impostor Syndrome?"
+   (list "Elizabeth Churchill")
+  "https://interactions.acm.org/archive/view/may-june-2018/is-there-a-fix-for-impostor-syndrome"
+   1655))
+ 
+; infosource-temp : InfoSource -> ?
+(define (infosource-temp i)
+  (...
+   (cond [(book? i) (... (book-title i)
+                         (los-temp (book-authors i))
+                         (book-page-count i) ...)]
+         [(article? i) (... (article-title i)
+                            (los-temp (article-authors i))
+                            (article-url i)
+                            (article-word-count i) ...)])))
+
+; %%%%%%%%%%%%% Exercise 1 %%%%%%%%%%%%%%
+
+; only-articles : [List-of InfoSource] -> [List-of InfoSource]
+; produces a list of the online articles in a given list of InfoSources
+(check-expect (only-articles article? (list IS-BOOK-1 IS-BOOK-2 IS-ARTICLE-1 IS-ARTICLE-2))
+              (list IS-ARTICLE-1 IS-ARTICLE-2))
+(define (only-articles lois article?)
+  (filter lois article?))
+
+
+; ; %%%%%%%%%%%%% Exercise 2 %%%%%%%%%%%%%%
+; 
+; ; all-authors : [List-of InfoSource] -> [List-of [List-of String]]
+; ; returns a single list of the all the authors in a list of info sources
+; (check-expect (all-authors authors? (list IS-BOOK-1 IS-BOOK-2))
+;               (append (list "Brian Christian" "Tom Griffiths") (list "Margot Lee Shetterly")))
+; (define (all-authors lois authors?)
+;   (list lois))
+; 
+; ; authors? : InfoSource -> Boolean
+; ; is it an author?
+; ;(check-expect (authors? IS-BOOK-1)
+
+
+
+; %%%%%%%%%%%%% Exercise 3 %%%%%%%%%%%%%%
+; num-books : [List-of InfoSource] -> Number
+; counts the number of books in a list of info sources
+(check-expect (num-books book? (list IS-BOOK-1 IS-BOOK-2 IS-ARTICLE-1 IS-ARTICLE-2)) 2)
+(check-expect (num-books book? (list IS-ARTICLE-1 IS-ARTICLE-2)) 0)
+(check-expect (num-books book? (list IS-BOOK-1 IS-ARTICLE-2)) 1)
+(define (num-books lois book?)
+  (cond [(empty? lois) 0]
+        [(cons? lois)
+         (book? (first lois) add1)
+         (num-books (rest lois))]))
+
+
+
+
+
+
+
