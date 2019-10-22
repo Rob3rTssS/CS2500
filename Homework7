@@ -57,36 +57,66 @@
   (filter lois article?))
 
 
-; ; %%%%%%%%%%%%% Exercise 2 %%%%%%%%%%%%%%
-; 
-; ; all-authors : [List-of InfoSource] -> [List-of [List-of String]]
-; ; returns a single list of the all the authors in a list of info sources
-; (check-expect (all-authors authors? (list IS-BOOK-1 IS-BOOK-2))
-;               (append (list "Brian Christian" "Tom Griffiths") (list "Margot Lee Shetterly")))
-; (define (all-authors lois authors?)
-;   (list lois))
-; 
-; ; authors? : InfoSource -> Boolean
-; ; is it an author?
-; ;(check-expect (authors? IS-BOOK-1)
+; %%%%%%%%%%%%% Exercise 2 %%%%%%%%%%%%%%  NEED TO MAKE 1 SINGLE LIST INSTEAD
 
+; all-authors : [List-of InfoSource] -> [List-of [List-of String]]
+; returns a single list of the all the authors in a list of info sources
+;(check-expect (all-authors (list IS-BOOK-1 IS-BOOK-2))
+             ; (list "Brian Christian" "Tom Griffiths" "Margot Lee Shetterly"))
+(define (all-authors lois)
+  (map get-authors lois))
+
+; get-authors: InfoSource -> [List-of String]
+; returns authors for in a given InfoSource
+(check-expect (get-authors IS-ARTICLE-2) (list "Elizabeth Churchill"))
+(check-expect (get-authors IS-BOOK-1) (list "Brian Christian" "Tom Griffiths"))
+(define (get-authors is)
+  (cond [(book? is) (book-authors is)]
+        [(article? is) (article-authors is)]))
 
 
 ; %%%%%%%%%%%%% Exercise 3 %%%%%%%%%%%%%%
-; num-books : [List-of InfoSource] -> Number
+; num-books : [List-of Book] -> Number
 ; counts the number of books in a list of info sources
-(check-expect (num-books book? (list IS-BOOK-1 IS-BOOK-2 IS-ARTICLE-1 IS-ARTICLE-2)) 2)
-(check-expect (num-books book? (list IS-ARTICLE-1 IS-ARTICLE-2)) 0)
-(check-expect (num-books book? (list IS-BOOK-1 IS-ARTICLE-2)) 1)
-(define (num-books lois book?)
-  (cond [(empty? lois) 0]
-        [(cons? lois)
-         (book? (first lois) add1)
-         (num-books (rest lois))]))
+(check-expect (num-books (list IS-BOOK-1 IS-BOOK-2)) 2)
+(check-expect (num-books (list IS-BOOK-1)) 1)
+(define (num-books lois)
+  (length (filter book? lois)))
+
+; book-list : [List-of InfoSource] -> [List-of Book]
+; creates a list of all the books in a given list of InforSources
+(check-expect (book-list book? (list IS-BOOK-1 IS-BOOK-2 IS-ARTICLE-1 IS-ARTICLE-2))
+              (list IS-BOOK-1 IS-BOOK-2))
+(check-expect (book-list book? (list IS-ARTICLE-1 IS-ARTICLE-2)) empty)
+(define (book-list lois book?)
+  (filter lois book?))
 
 
+;  %%%%%%%%%%%%% Exercise 4 %%%%%%%%%%%%%%
+
+; multi-author?: [List-of InfoSource] -> Boolean
+; does a lost of InfoSources contain a source with more than one authors?
+(check-expect (multi-author? (list IS-BOOK-1 IS-BOOK-2 IS-ARTICLE-1 IS-ARTICLE-2)) true)
+(check-expect (multi-author? (list IS-BOOK-2)) false)
+(define (multi-author? lois)
+  (cond [(empty? lois) false]
+        [else (or (< 1 (length (get-authors (first lois))))
+                  (multi-author? (rest lois)))]))
 
 
+; ;  %%%%%%%%%%%%% Exercise 5 %%%%%%%%%%%%%%
+; 
+; ; total-words : [List-of InfoSource] -> Number
+; ; computes the total number of words in a list of info sources (book page has 250 words)
+; (check-expect (total-words (list IS-BOOK-1 IS-BOOK-2)) 188000)
+; (check-expect (total-words (list IS-ARTICLE-1 IS-ARTICLE-2)) 3445)
+; (check-expect (total-words (list IS-BOOK-1 IS-ARTICLE-2)) 93655)
+; (define (total-words lois)
+;   (+  ))
+; 
+; (define WORDS 250)
+; ; book-words : [List-of Book] -> 
+; 
 
-
+  
 
