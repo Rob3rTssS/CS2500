@@ -83,14 +83,6 @@
 (define (num-books lois)
   (length (filter book? lois)))
 
-; book-list : [List-of InfoSource] -> [List-of Book]
-; creates a list of all the books in a given list of InforSources
-(check-expect (book-list book? (list IS-BOOK-1 IS-BOOK-2 IS-ARTICLE-1 IS-ARTICLE-2))
-              (list IS-BOOK-1 IS-BOOK-2))
-(check-expect (book-list book? (list IS-ARTICLE-1 IS-ARTICLE-2)) empty)
-(define (book-list lois book?)
-  (filter lois book?))
-
 
 ;  %%%%%%%%%%%%% Exercise 4 %%%%%%%%%%%%%%
 
