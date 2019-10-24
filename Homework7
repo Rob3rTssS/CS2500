@@ -61,15 +61,19 @@
 
 ; all-authors : [List-of InfoSource] -> [List-of [List-of String]]
 ; returns a single list of the all the authors in a list of info sources
-;(check-expect (all-authors (list IS-BOOK-1 IS-BOOK-2))
-             ; (list "Brian Christian" "Tom Griffiths" "Margot Lee Shetterly"))
+(check-expect (all-authors (list IS-BOOK-1 IS-BOOK-2))
+              (list "Brian Christian" "Tom Griffiths" "Margot Lee Shetterly"))
+(check-expect (all-authors (list IS-BOOK-1 IS-ARTICLE-1))
+              (list "Brian Christian" "Tom Griffiths" "Peter Norvig"))
+
 (define (all-authors lois)
-  (map get-authors lois))
+  (foldr append empty (map get-authors lois)))
 
 ; get-authors: InfoSource -> [List-of String]
 ; returns authors for in a given InfoSource
 (check-expect (get-authors IS-ARTICLE-2) (list "Elizabeth Churchill"))
 (check-expect (get-authors IS-BOOK-1) (list "Brian Christian" "Tom Griffiths"))
+
 (define (get-authors is)
   (cond [(book? is) (book-authors is)]
         [(article? is) (article-authors is)]))
@@ -79,36 +83,109 @@
 ; num-books : [List-of Book] -> Number
 ; counts the number of books in a list of info sources
 (check-expect (num-books (list IS-BOOK-1 IS-BOOK-2)) 2)
-(check-expect (num-books (list IS-BOOK-1)) 1)
+(check-expect (num-books (list IS-BOOK-1 IS-ARTICLE-1)) 1)
+(check-expect (num-books (list IS-ARTICLE-1 IS-ARTICLE-2)) 0)
+
 (define (num-books lois)
   (length (filter book? lois)))
 
 
 ;  %%%%%%%%%%%%% Exercise 4 %%%%%%%%%%%%%%
 
-; multi-author?: [List-of InfoSource] -> Boolean
+; multi-author? : [List-of InfoSource] -> Boolean
 ; does a lost of InfoSources contain a source with more than one authors?
-(check-expect (multi-author? (list IS-BOOK-1 IS-BOOK-2 IS-ARTICLE-1 IS-ARTICLE-2)) true)
-(check-expect (multi-author? (list IS-BOOK-2)) false)
+(check-expect (multi-author? (list IS-BOOK-1 IS-ARTICLE-2)) true)
+(check-expect (multi-author? (list IS-BOOK-2 IS-ARTICLE-1)) false)
+
 (define (multi-author? lois)
-  (cond [(empty? lois) false]
-        [else (or (< 1 (length (get-authors (first lois))))
-                  (multi-author? (rest lois)))]))
+  (ormap bigger-one? lois))
+
+; bigger-one? : InfoSource -> Boolean
+(check-expect (bigger-one? IS-BOOK-1) true)
+(check-expect (bigger-one? IS-ARTICLE-1) false)
+
+(define (bigger-one? is)
+  (cond
+    [(book? is)(< 1 (length (book-authors is)))]
+    [(article? is)(< 1 (length (article-authors is)))]))
 
 
 ; ;  %%%%%%%%%%%%% Exercise 5 %%%%%%%%%%%%%%
-; 
-; ; total-words : [List-of InfoSource] -> Number
-; ; computes the total number of words in a list of info sources (book page has 250 words)
-; (check-expect (total-words (list IS-BOOK-1 IS-BOOK-2)) 188000)
-; (check-expect (total-words (list IS-ARTICLE-1 IS-ARTICLE-2)) 3445)
-; (check-expect (total-words (list IS-BOOK-1 IS-ARTICLE-2)) 93655)
-; (define (total-words lois)
-;   (+  ))
-; 
-; (define WORDS 250)
-; ; book-words : [List-of Book] -> 
-; 
 
-  
+; total-words : [List-of InfoSource] -> Number
+; Computes the total number of words in a list of info sources
+(check-expect (total-words (list IS-BOOK-2 IS-ARTICLE-1)) 97790)
+(check-expect (total-words (list IS-BOOK-1 IS-ARTICLE-2)) 93655)
 
+(define (total-words lois)
+  (foldl + 0 (map word-each lois)))
+
+; word-each : InfoSource -> Number
+; Computes the number of words in an info sources
+(check-expect (word-each IS-BOOK-1) 92000)
+(check-expect (word-each IS-ARTICLE-1) 1790)
+
+(define (word-each is)
+  (cond
+    [(book? is) (* 250 (book-page-count is))]
+    [(article? is) (article-word-count is)]))
+
+; %%%%%%%%%%%%%%%%%%% Exercise 6 %%%%%%%%%%%%%%%%%%%
+
+; secure-articles? : [List-of InfoSource] -> Boolean
+; Returns true if all articles in a list of info sources are served from secure URLs
+(check-expect (secure-articles? (list IS-BOOK-2 IS-ARTICLE-1)) false)
+(check-expect (secure-articles? (list IS-BOOK-1 IS-ARTICLE-2)) true)
+(check-expect (secure-articles? (list IS-ARTICLE-1 IS-ARTICLE-2)) false)
+
+(define (secure-articles? lois)
+  (andmap https? lois))
+
+; https? : InfoSource -> Boolean
+; Determines whether the article is served from secure URLs
+(check-expect (https? IS-BOOK-1) true)
+(check-expect (https? IS-ARTICLE-1) false)
+(check-expect (https? IS-ARTICLE-2) true)
+
+(define (https? is)
+  (cond
+    [(book? is) true]
+    [(article? is) (string=? (substring (article-url is) 0 5) "https")]))
+    
+ 
+; %%%%%%%%%%%%%%%%%%% Exercise 8 %%%%%%%%%%%%%%%%%%%%
+
+; byline : InfoSource -> String
+; Produces a comma-separated list of the authors of an info source
+(check-expect (byline IS-BOOK-1) "By: Brian Christian, Tom Griffiths")
+(check-expect (byline IS-ARTICLE-1) "By: Peter Norvig")
+
+(define (byline is)
+  (cond
+    [(book? is)(foldr string-append "" (makelist (book-authors is)))]
+    [(article? is)(foldr string-append "" (makelist (article-authors is)))]))
+
+; makelist : [List-of String] -> [List-of String]
+; Produces a new list
+(check-expect (makelist (list "a"))
+              (list "By: " "a"))
+(check-expect (makelist (list "a" "b"))
+              (list "By: " "a" ", " "b"))
+(check-expect (makelist (list "b" "c" "a"))
+              (list "By: " "a" ", " "b" ", " "c"))
+
+(define (makelist l)
+  (foldr append empty (list (list "By: ")(insert (sort l string<?)))))
+
+; insert : [List-of String] -> [List-of String]
+; Inserts comma into a list of strings
+(check-expect (insert (list "a" "b")) (list "a" ", " "b"))
+(check-expect (insert (list "a")) (list "a"))
+(check-expect (insert (list "a" "b" "c")) (list "a" ", " "b" ", " "c"))
+
+(define (insert l)
+  (cond
+    [(empty? (rest l)) l]
+    [(cons? (rest l)) (foldr append empty (list (list (first l))
+                                                (list ", ")
+                                                (insert (rest l))))]))
